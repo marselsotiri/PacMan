@@ -1,3 +1,4 @@
+import Enemy from './Enemy';
 import MovingDirection from './MovingDirection';
 import Pacman from './Pacman';
 
@@ -8,6 +9,7 @@ export default class TileMap {
   public wall: HTMLImageElement;
   public powerDotAnmationTimerDefault: number;
   public powerDot: HTMLImageElement;
+  powerDotAnmationTimer: any;
 
   constructor(tileSize: number) {
     this.tileSize = tileSize;
@@ -23,7 +25,7 @@ export default class TileMap {
 
     this.powerDot = this.pinkDot;
     this.powerDotAnmationTimerDefault = 30;
-    this.powerDotAnmationTimerDefault = this.powerDotAnmationTimerDefault;
+    this.powerDotAnmationTimer = this.powerDotAnmationTimerDefault;
   }
 
   //1 - wall
@@ -54,6 +56,10 @@ export default class TileMap {
           this.#drawWall(ctx, column, row, this.tileSize);
         } else if (tile === 0) {
           this.#drawDot(ctx, column, row, this.tileSize);
+        } else if (tile == 7) {
+          this.#drawPowerDot(ctx, column, row, this.tileSize);
+        } else {
+          this.#drawBlank(ctx, column, row, this.tileSize);
         }
 
         //  ctx.strokeStyle = "yellow";
@@ -66,6 +72,20 @@ export default class TileMap {
       }
     }
   }
+
+  #drawPowerDot(ctx: any, column: number, row: number, size: number) {
+    this.powerDotAnmationTimer--;
+    if (this.powerDotAnmationTimer === 0) {
+      this.powerDotAnmationTimer = this.powerDotAnmationTimerDefault;
+      if (this.powerDot == this.pinkDot) {
+        this.powerDot = this.yellowDot;
+      } else {
+        this.powerDot = this.pinkDot;
+      }
+    }
+    ctx.drawImage(this.powerDot, column * size, row * size, size, size);
+  }
+
 
   getPacman(velocity: number) {
     for (let row = 0; row < this.map.length; row++) {
@@ -84,6 +104,29 @@ export default class TileMap {
       }
     }
     return null;
+  }
+
+  getEnemies(velocity: number) {
+    const enemies = [];
+
+    for (let row = 0; row < this.map.length; row++) {
+      for (let column = 0; column < this.map[row].length; column++) {
+        const tile = this.map[row][column];
+        if (tile == 6) {
+          this.map[row][column] = 0;
+          enemies.push(
+            new Enemy(
+              column * this.tileSize,
+              row * this.tileSize,
+              this.tileSize,
+              velocity,
+              this
+            )
+          );
+        }
+      }
+    }
+    return enemies;
   }
 
   #drawWall(ctx: any, column: any, row: any, size: any) {
@@ -106,11 +149,20 @@ export default class TileMap {
     );
   }
 
+  #drawBlank(ctx: any, column: number, row: number, size: any) {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(column * this.tileSize, row * this.tileSize, size, size);
+  }
+
   setCanvasSize(canvas: any) {
     canvas.nativeElement.width = this.map[0].length * this.tileSize;
     canvas.nativeElement.height = this.map.length * this.tileSize;
   }
+
   didCollideWithEnvironment(x: number, y: number, direction: any) {
+    if (direction == null) {
+      return;
+    }
     if (
       Number.isInteger(x / this.tileSize) &&
       Number.isInteger(y / this.tileSize)
@@ -144,6 +196,31 @@ export default class TileMap {
       }
       const tile = this.map[row][column];
       if (tile === 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  eatDot(x: number, y: number) {
+    const row = y / this.tileSize;
+    const column = x / this.tileSize;
+    if (Number.isInteger(row) && Number.isInteger(column)) {
+      if (this.map[row][column] === 0) {
+        this.map[row][column] = 5;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  eatPowerDot(x: number, y: number) {
+    const row = y / this.tileSize;
+    const column = x / this.tileSize;
+    if (Number.isInteger(row) && Number.isInteger(column)) {
+      const tile = this.map[row][column];
+      if (tile === 7) {
+        this.map[row][column] = 5;
         return true;
       }
     }

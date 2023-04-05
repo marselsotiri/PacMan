@@ -10,6 +10,15 @@ export default class Pacman {
   pacmanImageIndex!: number;
   currentMovingDirection: number | null;
   requestedMovingDirection: number | null;
+  pacmanAnimationTimerDefault: number;
+  pacmanAnimationTimer: any;
+  pacmanRotation: number;
+  madeFirstMove: any;
+  wakaSound: any;
+  powerDotSound: HTMLAudioElement;
+  powerDotActive: boolean;
+  powerDotAboutToExpire: boolean;
+  timers: any;
 
   constructor(
     x: number,
@@ -27,21 +36,58 @@ export default class Pacman {
     this.currentMovingDirection = null;
     this.requestedMovingDirection = null;
 
-    document.addEventListener('keydown', this.#keydown.bind(this))
+    this.pacmanAnimationTimerDefault = 10;
+    this.pacmanAnimationTimer = null;
 
+    this.madeFirstMove = false;
+
+    this.pacmanRotation = this.Rotation.right;
+    this.wakaSound = new Audio('../../assets/sounds/waka.wav');
+
+    this.powerDotSound = new Audio('../../assets/sounds/power_dot.wav');
+    this.powerDotActive = false;
+    this.powerDotAboutToExpire = false;
+
+    document.addEventListener('keydown', this.#keydown.bind(this));
 
     this.#loadPacmanImages();
   }
 
+  Rotation = {
+    right: 0,
+    down: 1,
+    left: 2,
+    up: 3,
+  };
+
   draw(ctx: any) {
     this.#move();
+    this.#animate();
+    this.#eatDot();
+    this.#eatPowerDot();
+
+    const size = this.tileSize / 2;
+
+    ctx.save();
+    ctx.translate(this.x + size, this.y + size);
+    ctx.rotate((this.pacmanRotation * 90 * Math.PI) / 180);
     ctx.drawImage(
       this.pacmanImages[this.pacmanImageIndex],
-      this.x,
-      this.y,
+      -size,
+      -size,
       this.tileSize,
       this.tileSize
     );
+
+    ctx.restore();
+
+    // ctx.drawImage(
+    //   this.pacmanImages[this.pacmanImageIndex],
+    //   this.x,
+    //   this.y,
+    //   this.tileSize,
+    //   this.tileSize
+    // );
   }
 
   #loadPacmanImages() {
@@ -73,24 +119,28 @@ export default class Pacman {
       if (this.currentMovingDirection == MovingDirection.down)
         this.currentMovingDirection = MovingDirection.up;
       this.requestedMovingDirection = MovingDirection.up;
+      this.madeFirstMove = true;
     }
     // down
     if (event.keyCode == 40) {
       if (this.currentMovingDirection == MovingDirection.up)
         this.currentMovingDirection = MovingDirection.down;
       this.requestedMovingDirection = MovingDirection.down;
+      this.madeFirstMove = true;
     }
     // left
     if (event.keyCode == 37) {
       if (this.currentMovingDirection == MovingDirection.right)
         this.currentMovingDirection = MovingDirection.left;
       this.requestedMovingDirection = MovingDirection.left;
+      this.madeFirstMove = true;
     }
     // right
     if (event.keyCode == 39) {
       if (this.currentMovingDirection == MovingDirection.left)
         this.currentMovingDirection = MovingDirection.right;
       this.requestedMovingDirection = MovingDirection.right;
+      this.madeFirstMove = true;
     }
   }
 
@@ -107,7 +157,7 @@ export default class Pacman {
             this.requestedMovingDirection
           )
         )
-        this.currentMovingDirection = this.requestedMovingDirection
+          this.currentMovingDirection = this.requestedMovingDirection;
       }
     }
 
@@ -117,24 +167,73 @@ export default class Pacman {
         this.y,
         this.currentMovingDirection
       )
-    ){
+    ) {
+      this.pacmanAnimationTimer = null;
+      this.pacmanImageIndex = 1;
+      return;
+    } else if (
+      this.currentMovingDirection != null &&
+      this.pacmanAnimationTimer == null
+    ) {
+      this.pacmanAnimationTimer = this.pacmanAnimationTimerDefault;
+    }
+    switch (this.currentMovingDirection) {
+      case MovingDirection.up:
+        this.y -= this.velocity;
+        this.pacmanRotation = this.Rotation.up;
+        break;
+      case MovingDirection.down:
+        this.y += this.velocity;
+        this.pacmanRotation = this.Rotation.down;
+        break;
+      case MovingDirection.left:
+        this.x -= this.velocity;
+        this.pacmanRotation = this.Rotation.left;
+        break;
+      case MovingDirection.right:
+        this.x += this.velocity;
+        this.pacmanRotation = this.Rotation.right;
+        break;
+    }
+  }
+
+  #animate() {
+    if (this.pacmanAnimationTimer == null) {
       return;
     }
-      switch (this.currentMovingDirection) {
-        case MovingDirection.up:
-          this.y -= this.velocity;
-          break;
-        case MovingDirection.down:
-          this.y += this.velocity;
-          break;
-        case MovingDirection.left:
-          this.x -= this.velocity;
-          break;
-        case MovingDirection.right:
-          this.x += this.velocity;
-          break;
+    this.pacmanAnimationTimer--;
+    if (this.pacmanAnimationTimer == 0) {
+      this.pacmanAnimationTimer = this.pacmanAnimationTimerDefault;
+      this.pacmanImageIndex++;
+      if (this.pacmanImageIndex == this.pacmanImages.length)
+        this.pacmanImageIndex = 0;
+    }
+  }
+
+  #eatDot() {
+    if (this.tileMap.eatDot(this.x, this.y) && this.madeFirstMove) {
+      this.wakaSound.play();
+    }
+  }
+
+  #eatPowerDot() {
+    if (this.tileMap.eatPowerDot(this.x, this.y)) {
+      this.powerDotSound.play();
+      this.powerDotActive = true;
+      this.powerDotAboutToExpire = false;
+      if (this.timers !== undefined) {
+        this.timers.forEach((timer: any) => clearTimeout(timer));
+        this.timers = [];
+        let powerDotTimer = setTimeout(() => {
+          this.powerDotActive = false;
+          this.powerDotAboutToExpire = false;
+        }, 1000 * 6);
+        this.timers.push(powerDotTimer);
+        let powerDotAboutToExpireTimer = setTimeout(() => {
+          this.powerDotAboutToExpire = true;
+        }, 1000 * 3);
+        this.timers.push(powerDotAboutToExpireTimer);
       }
     }
-
-
+  }
 }

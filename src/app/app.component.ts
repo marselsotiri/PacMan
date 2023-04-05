@@ -17,10 +17,13 @@ export class GameComponent implements OnInit {
   private interval!: any;
   private tileMap: TileMap;
   private pacman: any;
+  private enemies: any;
+
 
   constructor() {
     this.tileMap = new TileMap(this.tileSize);
     this.pacman = this.tileMap.getPacman(this.velocity);
+    this.enemies = this.tileMap.getEnemies(this.velocity);
   }
 
   ngOnInit() {
@@ -30,9 +33,13 @@ export class GameComponent implements OnInit {
       this.gameLoop();
     }, 1000 / 75);
   }
-
+  
+  pause() {
+    return !this.pacman.madeFirstMove
+  }
   gameLoop() {
     this.tileMap.draw(this.ctx);
     this.pacman.draw(this.ctx)
+    this.enemies.forEach((enemy: any) => enemy.draw(this.ctx, this.pause()));
   }
 }

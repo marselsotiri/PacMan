@@ -1,3 +1,5 @@
+// Problem with Firebase Configuration
+
 // export const environment = {
 //   production: false,
 //   firebase: {

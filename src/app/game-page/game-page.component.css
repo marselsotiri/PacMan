@@ -1,0 +1,17 @@
+h1, h2{
+  text-align: center;
+  font-family: comic sans MS;
+  color: lightgray
+}
+
+#gameCanvas{
+  box-shadow: 10px 10px 20px rgb(219, 56, 56);
+}
+
+:host{
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  height: 100vh;
+  background-color: #000;
+}

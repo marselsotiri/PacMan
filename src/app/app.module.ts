@@ -2,17 +2,27 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
-import { GameComponent } from './app.component';
+import { LoginComponent } from './login/login.component';
+import { GamePageComponent } from './game-page/game-page.component';
+import { AppComponent } from './app.component';
+// import { AngularFireModule } from "@angular/fire/compat";
+// import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
+// import { environment } from '../environments/environment';
+
 
 @NgModule({
   declarations: [
-    GameComponent,
+    AppComponent,
+    LoginComponent,
+    GamePageComponent,
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    // AngularFireModule.initializeApp(environment.firebase),
+    // AngularFirestoreModule
   ],
   providers: [],
-  bootstrap: [GameComponent]
+  bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -19,6 +19,8 @@ export default class Pacman {
   powerDotActive: boolean;
   powerDotAboutToExpire: boolean;
   timers: any;
+  eatGhostSound: HTMLAudioElement;
+  playerPoint: number = 0;
 
   constructor(
     x: number,
@@ -44,9 +46,12 @@ export default class Pacman {
     this.pacmanRotation = this.Rotation.right;
     this.wakaSound = new Audio('../../assets/sounds/waka.wav');
 
+    this.eatGhostSound = new Audio('../../assets/sounds/eat_ghost.wav');
+
     this.powerDotSound = new Audio('../../assets/sounds/power_dot.wav');
     this.powerDotActive = false;
     this.powerDotAboutToExpire = false;
+    this.timers = [];
 
     document.addEventListener('keydown', this.#keydown.bind(this));
 
@@ -60,11 +65,14 @@ export default class Pacman {
     up: 3,
   };
 
-  draw(ctx: any) {
-    this.#move();
-    this.#animate();
+  draw(ctx: any, pause: any, enemies: any) {
+    if (!pause) {
+      this.#move();
+      this.#animate();
+    }
     this.#eatDot();
     this.#eatPowerDot();
+    this.#eatGhost(enemies);
 
     const size = this.tileSize / 2;
 
@@ -213,27 +221,39 @@ export default class Pacman {
   #eatDot() {
     if (this.tileMap.eatDot(this.x, this.y) && this.madeFirstMove) {
       this.wakaSound.play();
+      this.playerPoint += 10;
     }
   }
 
   #eatPowerDot() {
     if (this.tileMap.eatPowerDot(this.x, this.y)) {
+      this.playerPoint += 10;
       this.powerDotSound.play();
       this.powerDotActive = true;
       this.powerDotAboutToExpire = false;
-      if (this.timers !== undefined) {
-        this.timers.forEach((timer: any) => clearTimeout(timer));
-        this.timers = [];
-        let powerDotTimer = setTimeout(() => {
-          this.powerDotActive = false;
-          this.powerDotAboutToExpire = false;
-        }, 1000 * 6);
-        this.timers.push(powerDotTimer);
-        let powerDotAboutToExpireTimer = setTimeout(() => {
-          this.powerDotAboutToExpire = true;
-        }, 1000 * 3);
-        this.timers.push(powerDotAboutToExpireTimer);
-      }
+      this.timers.forEach((timer: any) => clearTimeout(timer));
+      this.timers = [];
+      let powerDotTimer = setTimeout(() => {
+        this.powerDotActive = false;
+        this.powerDotAboutToExpire = false;
+      }, 1000 * 6);
+      this.timers.push(powerDotTimer);
+      let powerDotAboutToExpireTimer = setTimeout(() => {
+        this.powerDotAboutToExpire = true;
+      }, 1000 * 3);
+      this.timers.push(powerDotAboutToExpireTimer);
+    }
+  }
+
+  #eatGhost(enemies: any) {
+    if (this.powerDotActive) {
+      const collideEnemies = enemies.filter((enemy: any) =>
+        enemy.collideWith(this)
+      );
+      collideEnemies.forEach((enemy: any) => {
+        enemies.splice(enemies.indexOf(enemy), 1);
+        this.eatGhostSound.play();
+      });
     }
   }
 }

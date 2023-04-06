@@ -1,0 +1,9 @@
+:host {
+  display: grid;
+  grid-auto-flow: column;
+  color: aliceblue;
+}
+
+.player-legend ul {
+  list-style: none;
+}

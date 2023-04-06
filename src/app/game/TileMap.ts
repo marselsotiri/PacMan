@@ -9,7 +9,7 @@ export default class TileMap {
   public wall: HTMLImageElement;
   public powerDotAnmationTimerDefault: number;
   public powerDot: HTMLImageElement;
-  powerDotAnmationTimer: any;
+  public powerDotAnmationTimer: any;
 
   constructor(tileSize: number) {
     this.tileSize = tileSize;
@@ -36,14 +36,17 @@ export default class TileMap {
   //7 - power dot
   map = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 7, 0, 0, 4, 0, 0, 0, 0, 0, 0, 7, 1],
+    [1, 7, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
     [1, 0, 1, 6, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 7, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
     [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
     [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 7, 1, 0, 1, 0, 1, 7, 1],
     [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
     [1, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   ];
@@ -200,6 +203,14 @@ export default class TileMap {
       }
     }
     return false;
+  }
+
+  didWin() {
+    return this.#dotsLeft() === 0;
+  }
+
+  #dotsLeft() {
+    return this.map.flat().filter((tile) => tile === 0).length;
   }
 
   eatDot(x: number, y: number) {

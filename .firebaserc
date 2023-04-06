@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "pacman-12": {
+      "hosting": {
+        "PacMan": [
+          "pacman-12"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "pacman-12"
+  }
+}
